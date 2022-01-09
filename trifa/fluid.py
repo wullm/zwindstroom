@@ -20,13 +20,10 @@ class GROWTH_FACTORS(ctypes.Structure):
                 ("Dn", ctypes.POINTER(ctypes.c_double))]
 
 backend.engine.prepare_fluid_integrator.argtypes = [ctypes.POINTER(cosmology.MODEL), ctypes.POINTER(units.UNITS), ctypes.POINTER(units.PHYSICAL_CONSTS), ctypes.POINTER(cosmology.TABLES), ctypes.c_double, ctypes.c_double]
-backend.engine.prepare_fluid_integrator.restypes = []
 
 backend.engine.integrate_fluid_equations.argtypes = [ctypes.POINTER(cosmology.MODEL), ctypes.POINTER(units.UNITS), ctypes.POINTER(units.PHYSICAL_CONSTS), ctypes.POINTER(cosmology.TABLES), ctypes.POINTER(GROWTH_FACTORS), ctypes.c_double, ctypes.c_double]
-backend.engine.integrate_fluid_equations.restypes = []
 
 backend.engine.free_fluid_integrator.argtypes = []
-backend.engine.free_fluid_integrator.restypes = []
 
 def prepare_fluid_integrator(model, units, physical_consts, tables, tol, hstart):
     """
