@@ -4,7 +4,7 @@ TriFA
 Package with methods for computing background quantities and scale-dependent
 growth factors for massive neutrino cosmologies using a 3-fluid approximation,
 following Zennaro+16. Supports multi-fluid models with distinct transfer
-functions and interfaces with classy.
+functions and interfaces with classy. (Formally known as 3FA).
 
 Quick Installation
 ------------------
