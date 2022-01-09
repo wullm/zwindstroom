@@ -1,6 +1,5 @@
 """
-Contains methods to set up and execute the cosmological
-and fluid calculations
+Interface with the shared C library via ctypes.
 """
 
 import ctypes

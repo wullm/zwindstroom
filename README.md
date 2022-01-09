@@ -43,7 +43,7 @@ M_nu = [0.05, 0.07] # eV
 deg_nu = [2.0, 1.0] # degeneracies
 N_nu = len(M_nu)
 
-# Initialise a unit system (default uses Mpc and km/s velocities)
+# Initialise a unit system (default uses Mpc lengths and km/s velocities)
 unit_system, physical_consts = units.init_units()
 
 # We want to integrate the cosmological tables from this point

@@ -1,6 +1,5 @@
 """
-Contains methods to set up and execute the cosmological
-and fluid calculations
+Contains methods to run CLASS and extract relevant quantities.
 """
 
 from classy import Class
