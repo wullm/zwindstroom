@@ -22,7 +22,26 @@ def get_class_name(name):
 def double_array_to_string(array):
     return "".join("%g, " % d for d in array)[:-2]
 
-def run_class(model, a_first):
+def run_class(model, unit_system, a_first, k_max, extra_params = {}):
+    """
+    Run CLASS on a cosmological model.
+    Parameters
+    ----------
+    model : MODEL
+        a cosmological model
+    units: UNITS
+        a unit system
+    a_first: double
+        starting scale factor time of the CLASS tables
+    k_max: double
+        maximum wavenumber in internal units to compute transfer functions
+    extra_params: dictionary
+        optionally pass along additional parameters to CLASS
+    Return
+    ------
+    cosmo
+        A CLASS object
+    """
     model_params = {}
     model_params["h"] = model.h
     model_params["Omega_b"] = model.Omega_b
@@ -51,6 +70,13 @@ def run_class(model, a_first):
     z_max = 1.0 / a_first - 1.0
     class_params["z_max_pk"] = z_max
 
+    # Specify the maximum wavenumber
+    k_max_Mpc = k_max * units.__Mpc / unit_system.UnitLengthMetres
+    class_params["P_k_max_1/Mpc"] = k_max_Mpc
+
+    # Add the additional parameters
+    class_params = {**class_params, **extra_params}
+
     # Run CLASS
     cosmo = Class()
     cosmo.set(class_params)
@@ -58,7 +84,21 @@ def run_class(model, a_first):
     return cosmo
 
 def get_growth_rates(model, cosmo, a):
-
+    """
+    Extract logarithmic growth rates from CLASS at a given scale factor a
+    Parameters
+    ----------
+    model : MODEL
+        a cosmological model
+    cosmo: CLASS
+        a CLASS object
+    a: double
+        the scale factor
+    Return
+    ------
+    growth_rates
+        Dictionary with growth rates for the fluid species
+    """
     # Prepare the output
     growth_rates = {}
     keys = ["d_cdm", "d_b"]
@@ -87,7 +127,22 @@ def get_growth_rates(model, cosmo, a):
     return growth_rates
 
 def get_growth_factors(model, cosmo, a):
-
+    """
+    Extract growth factors (density transfer functions) from CLASS at a given
+    scale factor a
+    Parameters
+    ----------
+    model : MODEL
+        a cosmological model
+    cosmo: CLASS
+        a CLASS object
+    a: double
+        the scale factor
+    Return
+    ------
+    growth_factors
+        Dictionary with growth factors for the fluid species
+    """
     # Prepare the output
     growth_factors = {}
     keys = ["d_cdm", "d_b"]
@@ -114,5 +169,20 @@ def get_growth_factors(model, cosmo, a):
     return growth_factors
 
 def get_wavenumbers(model, cosmo, unit_system):
+    """
+    Extract vector of wavenumbers from CLASS in internal units
+    Parameters
+    ----------
+    model : MODEL
+        a cosmological model
+    cosmo: CLASS
+        a CLASS object
+    unit_system: UNITS
+        the unit system
+    Return
+    ------
+    wavenumbers: vector of doubles
+        The wavenumbers
+    """
     transfer = cosmo.get_transfer()
     return transfer["k (h/Mpc)"] * model.h * units.__Mpc / unit_system.UnitLengthMetres

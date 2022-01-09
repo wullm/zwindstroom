@@ -39,8 +39,8 @@ non-relativistic neutrinos for a given cosmological model.
 from trifa import *
 
 # The neutrino species
-M_nu = [0.05, 0.1] # eV
-deg_nu = [1.0, 2.0] # degeneracies
+M_nu = [0.05, 0.07] # eV
+deg_nu = [2.0, 1.0] # degeneracies
 N_nu = len(M_nu)
 
 # Initialise a unit system (default uses Mpc and km/s velocities)

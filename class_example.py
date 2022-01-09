@@ -7,8 +7,8 @@ import ctypes
 import numpy as np
 
 # The neutrino species
-M_nu = [0.05, 0.1] # eV
-deg_nu = [1.0, 2.0] # degeneracies
+M_nu = [0.05, 0.07] # eV
+deg_nu = [2.0, 1.0] # degeneracies
 N_nu = len(M_nu)
 
 # Initialise a unit system (default uses Mpc and km/s velocities)
@@ -51,8 +51,11 @@ fluid.prepare_fluid_integrator(model, unit_system, physical_consts, model.tables
 
 print("Running CLASS.")
 
+# Maximum wavenumber for the growth factors (default units = 1 / Mpc)
+k_max = 10.0
+
 # Run CLASS on this model
-cosmo = class_link.run_class(model, a_start_fl)
+cosmo = class_link.run_class(model, unit_system, a_start_fl, k_max)
 
 # Extract growth factors, growth rates, and wavenumbers from CLASS
 k = class_link.get_wavenumbers(model, cosmo, unit_system)
@@ -98,7 +101,7 @@ print("Done with integrations.")
 # Write the output to a text file
 D_table = np.append(np.array([k, D_cdm, D_b]), D_nu.T).reshape((3+N_nu,nk))
 header = "Growth factors between a_begin = %g and a_end = %g" % (a_start_fl, a_final_fl) + "\n"
-header += "Wavenumbers in inverse length unit 1/U_L = %g m (no h)\n" % (1.0 / unit_system.UnitLengthMetres)
+header += "Wavenumbers in inverse length unit 1/U_L = %g m^-1 = %g Mpc^-1 (no h)\n" % (1.0 / unit_system.UnitLengthMetres, units.__Mpc / unit_system.UnitLengthMetres)
 header += "Neutrino masses: [" + "".join("%g, " % m for m in M_nu)[:-2] + "] eV\n"
 header += "Degeneracies: [" + "".join("%g, " % m for m in deg_nu)[:-2] + "]\n\n"
 header += "k D_cdm D_b " + "".join("D_nu[%g] " % d for d in range(N_nu))[:-1]
