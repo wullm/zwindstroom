@@ -110,7 +110,7 @@ def get_growth_rates(model, cosmo, a):
     a_next = min(exp(loga + 0.5 * dloga), 1)
     z_prev = 1.0 / a_prev - 1.0
     z_next = 1.0 / a_next - 1.0
-    z = 1.0 / a
+    z = 1.0 / a - 1.0
 
     transfer = cosmo.get_transfer(z = z)
     transfer_prev = cosmo.get_transfer(z = z_prev)
@@ -147,15 +147,9 @@ def get_growth_factors(model, cosmo, a):
     keys = ["d_cdm", "d_b"]
     keys += ["d_ncdm[%d]" % i for i in range(model.N_nu)]
 
-    # We use a central difference approximation
-    loga = log(a)
-    dloga = 0.001
-    a_prev = exp(loga - 0.5 * dloga)
-    a_next = min(exp(loga + 0.5 * dloga), 1)
-    z_prev = 1.0 / a_prev - 1.0
-    z_next = 1.0 / a_next - 1.0
-    z = 1.0 / a
 
+    # Extract the transfer functions as redshift z
+    z = 1.0 / a - 1.0
     transfer = cosmo.get_transfer(z = z)
 
     # Normalise by the cdm density transfer function
