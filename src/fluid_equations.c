@@ -39,6 +39,7 @@ struct ode_params {
     int N_nu;
 };
 
+/* The right-hand side of the ODE */
 int func (double log_a, const double y[], double f[], void *params) {
     struct ode_params *p = (struct ode_params *) params;
     struct strooklat *spline = p->spline;
@@ -109,7 +110,7 @@ void prepare_fluid_integrator(struct model *m, struct units *us,
                               double hstart) {
 
     /* Set the dimension of the system (2nd order ODE for cdm, baryons, and
-     * N neutrino species makes for 4 + 2N degrees of greedom) */
+     * N neutrino species makes for 4 + 2N degrees of freedom) */
     sys.dimension = 4 + 2 * m->N_nu;
 
     /* Prepare the parameters for the fluid ODEs */
