@@ -5,8 +5,8 @@ time.
 """
 
 import ctypes
-import trifa.backend as backend
-import trifa.units as units
+import zwindstroom.backend as backend
+import zwindstroom.units as units
 
 class TABLES(ctypes.Structure):
     _fields_ = [("avec", ctypes.POINTER(ctypes.c_double)),

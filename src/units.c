@@ -1,5 +1,5 @@
 /*******************************************************************************
- * This file is part of 3FA.
+ * This file is part of Zwindstroom.
  * Copyright (c) 2020 Willem Elbers (whe@willemelbers.com)
  *
  * This program is free software: you can redistribute it and/or modify

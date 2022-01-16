@@ -1,10 +1,16 @@
-TriFA
-=====
+Zwindstroom
+===========
 
-Package with methods for computing background quantities and scale-dependent
-growth factors for massive neutrino cosmologies using a 3-fluid approximation,
-following Zennaro+16. Supports multi-fluid models with distinct transfer
-functions and interfaces with classy. (Formally known as 3FA).
+The purpose of Zwindstroom is to provide methods for computing background
+quantities and scale-dependent growth factors for massive neutrino cosmologies.
+Following the earlier REPS code (Zennaro et al., 2016), we use a Newtonian
+fluid approximation with an external neutrino sound speed to close the Boltzmann
+hierarchy (Shoji & Komatsu 2010; Blas et al. 2014). Zwindstroom supports
+multi-fluid models with distinct transfer functions and sound speeds. A flexible
+python interface makes it easy to interact with CLASS (through classy). There is
+also a Zwindstroom plugin for the cosmological initial conditions generator
+monofonIC that allows for higher-order LPT ICs for massive neutrino
+simulations in a single step.
 
 Quick Installation
 ------------------
@@ -21,7 +27,7 @@ cd ..
 Then the python package can be loaded with
 
 ```python
-import trifa
+import zwindstroom
 ```
 
 Requirements
@@ -36,7 +42,7 @@ The following snippet computes the present-day mass fraction of
 non-relativistic neutrinos for a given cosmological model.
 
 ```python
-from trifa import *
+from zwindstroom import *
 
 # The neutrino species
 M_nu = [0.05, 0.07] # eV
@@ -46,7 +52,7 @@ N_nu = len(M_nu)
 # Initialise a unit system (default uses Mpc lengths and km/s velocities)
 unit_system, physical_consts = units.init_units()
 
-# We want to integrate the cosmological tables from this point
+# We want to integrate the cosmological tables starting at this scale factor
 a_start = 1e-3
 
 # Set up a cosmological model
@@ -67,5 +73,5 @@ f_nu = model.get_f_nu_nr_tot_of_a(1.0)
 print("The neutrino fraction is:", f_nu)
 ```
 
-See `class_example.py` for a calculation of growth factors using growth rates
-from classy.
+See `example_growth_factors_class.py` for a calculation of growth factors using
+growth rates from classy.

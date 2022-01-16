@@ -3,9 +3,9 @@ Perform first-order fluid calculations for a coupled CDM-Baryon-Neutrino model.
 """
 
 import ctypes
-import trifa.backend as backend
-import trifa.units as units
-import trifa.cosmology as cosmology
+import zwindstroom.backend as backend
+import zwindstroom.units as units
+import zwindstroom.cosmology as cosmology
 
 class GROWTH_FACTORS(ctypes.Structure):
     _fields_ = [("k", ctypes.c_double),

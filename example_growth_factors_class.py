@@ -1,8 +1,8 @@
-import trifa.units as units
-import trifa.cosmology as cosmology
-import trifa.backend as backend
-import trifa.fluid as fluid
-import trifa.class_link as class_link
+import zwindstroom.units as units
+import zwindstroom.cosmology as cosmology
+import zwindstroom.backend as backend
+import zwindstroom.fluid as fluid
+import zwindstroom.class_link as class_link
 import ctypes
 import numpy as np
 
@@ -14,7 +14,7 @@ N_nu = len(M_nu)
 # Initialise a unit system (default uses Mpc lengths and km/s velocities)
 unit_system, physical_consts = units.init_units()
 
-# We want to integrate the cosmological tables from this point
+# We want to integrate the cosmological tables starting at this scale factor
 a_start = 1e-3
 
 # Set up a cosmological model

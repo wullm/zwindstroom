@@ -9,7 +9,7 @@ we use GADGET units without reference to the h parameter:
 """
 
 import ctypes
-import trifa.backend as backend
+import zwindstroom.backend as backend
 
 class UNITS(ctypes.Structure):
     _fields_ = [("UnitLengthMetres", ctypes.c_double),

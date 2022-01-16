@@ -3,7 +3,7 @@ Contains methods to run CLASS and extract relevant quantities.
 """
 
 from classy import Class
-import trifa.units as units
+import zwindstroom.units as units
 from math import log, exp
 
 def get_class_name(name):
