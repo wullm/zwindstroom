@@ -31,7 +31,8 @@ class MODEL(ctypes.Structure):
                 ("T_CMB_0", ctypes.c_double),
                 ("w0", ctypes.c_double),
                 ("wa", ctypes.c_double),
-                ("sim_neutrino_nonrel_masses", ctypes.c_int)]
+                ("sim_neutrino_nonrel_masses", ctypes.c_int),
+                ("sim_neutrino_nonrel_Hubble", ctypes.c_int)]
 
     # Cosmological tables with functions of time
     tables = TABLES()
@@ -97,6 +98,10 @@ class MODEL(ctypes.Structure):
             self.w0 = store
         elif key == "wa":
             self.wa = store
+        elif key == "sim_neutrino_nonrel_masses":
+            self.sim_neutrino_nonrel_masses = store
+        elif key == "sim_neutrino_nonrel_Hubble":
+            self.sim_neutrino_nonrel_Hubble = store
         else:
             raise KeyError("Unknown parameter")
 
@@ -105,6 +110,25 @@ class MODEL(ctypes.Structure):
             self.set_parameter(key, params[key])
         self.default_neutrino_arrays()
         return True
+
+    def set_sim_type(self, type):
+        """
+        Set the type of cosmological simulation in terms of how massive
+        neutrinos are handled:
+        + 0 (fully relativistic)
+        + 1 (relativistic Hubble rate, but constant particle masses)
+        + 2 (fully non-relativistic)
+        Parameters
+        ----------
+        model : MODEL
+            a cosmological model
+        type: int
+            the type of simulation (0,1,2)
+        """
+        if not (type == 0 or type == 1 or type == 2):
+            raise ValueError("Invalid simulation type")
+        self.sim_neutrino_nonrel_masses = 1 if (type == 1 or type == 2) else 0
+        self.sim_neutrino_nonrel_Hubble = 1 if type == 2 else 0
 
     def compute(self, units, physical_consts, a_start, a_final = 1.05, size = 1000):
         integrate_cosmology_tables(self, units, physical_consts, self.tables, a_start, a_final, size)

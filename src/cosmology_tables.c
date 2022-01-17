@@ -247,6 +247,21 @@ void integrate_cosmology_tables(struct model *m, struct units *us,
     const double w0 = m->w0;
     const double wa = m->wa;
 
+    /* If neutrinos are to be treated as non-relativistic for the purpose of
+     * calculating the Hubble rate, we need to replace the previous calculation
+     * of Omega_nu(a) with Omega_nu_0 now (i.e. before calculating Hvec). */
+    if (m->sim_neutrino_nonrel_Hubble) {
+        for (int i=0; i<size; i++) {
+            Omega_m[i] = Omega_cb + Omega_nu_tot_0;
+            Omega_nu_tot[i] = Omega_nu_tot_0;
+            Omega_nu_nr[i] = Omega_nu_tot_0;
+            tab->f_nu_nr_tot[i] = Omega_nu_tot_0 / (Omega_cb + Omega_nu_tot_0);
+            for (int j=0; j<N_nu; j++) {
+                tab->f_nu_nr[j * size + i] = Omega_nu_0[j] / (Omega_cb + Omega_nu_tot_0);
+            }
+        }
+    }
+
     /* Now, create a table with the Hubble rate */
     for (int i=0; i<size; i++) {
         double Omega_nu_a = strooklat_interp(&spline, Omega_nu_tot, tab->avec[i]);
@@ -274,9 +289,9 @@ void integrate_cosmology_tables(struct model *m, struct units *us,
     /* If neutrino particle masses are not varied in the N-body simulation to
      * account for the relativistic energy density, we need to replace the
      * previous calculation of Omega_nu(a) with Omega_nu_0. However, this
-     * must be done after calculating the Hubble rate, where we do take
-     * the relativistic contribution into account. */
-    if (m->sim_neutrino_nonrel_masses) {
+     * must be done after calculating the Hubble rate, if we do take the
+     * relativistic contribution into account there. */
+    if (m->sim_neutrino_nonrel_masses && !m->sim_neutrino_nonrel_Hubble) {
         for (int i=0; i<size; i++) {
             Omega_m[i] = Omega_cb + Omega_nu_tot_0;
             Omega_nu_tot[i] = Omega_nu_tot_0;

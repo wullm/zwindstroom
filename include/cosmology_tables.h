@@ -39,6 +39,8 @@ struct model {
 
     /* Do the simulation particles not have masses that vary with w_nu(a)? */
     int sim_neutrino_nonrel_masses;
+    /* Does the simulation have a Hubble rate with Omega_nu(a) = constant? */
+    int sim_neutrino_nonrel_Hubble;
 };
 
 struct cosmology_tables {

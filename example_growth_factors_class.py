@@ -32,6 +32,13 @@ params = {"h": 0.67,
 model = cosmology.MODEL()
 model.set(params)
 
+# Let zwindstroom know how neutrinos are treated in the cosmological simulation
+# The options are:
+# + 0 (fully relativistic)
+# + 1 (relativistic Hubble rate, but constant particle masses)
+# + 2 (fully non-relativistic)
+model.set_sim_type(1)
+
 print("Integrating cosmological tables.")
 
 # Integrate tables of cosmological background quantities
