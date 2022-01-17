@@ -30,6 +30,7 @@ class PHYSICAL_CONSTS(ctypes.Structure):
 __Mpc = 3.085677581282e22
 __kms = 3.08567758148957E+019
 __MsolE10 = 1.988435e40
+__c_kms = 2.99792458e5
 default_units = UNITS()
 default_units.UnitLengthMetres = __Mpc # Mpc (no h)
 default_units.UnitTimeSeconds = __kms # km/s speeds
