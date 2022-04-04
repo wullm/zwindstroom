@@ -36,6 +36,7 @@ struct ode_params {
     double k;
     double f_b;
     double *c_s_nu;
+    double c_light;
     int N_nu;
 };
 
@@ -49,6 +50,7 @@ int func (double log_a, const double y[], double f[], void *params) {
     const int N_nu = p->N_nu;
     const double k = p->k;
     const double f_b = p->f_b;
+    const double c = p->c_light;
 
     /* Cosmological functions of time */
     const double a = exp(log_a);
@@ -68,7 +70,8 @@ int func (double log_a, const double y[], double f[], void *params) {
     double k_fs2[N_nu];
     for (int i = 0; i < N_nu; i++) {
         double c_s = p->c_s_nu[i] / a;
-        k_fs2[i] = -B * H * H / (c_s * c_s) * (a * a);
+        double c_s_rel = c / hypot(3.0, c / c_s); // relativistic correction
+        k_fs2[i] = -B * H * H / (c_s_rel * c_s_rel) * (a * a);
     }
 
     /* The weighted cdm and baryon density perturbation */
@@ -119,6 +122,7 @@ void prepare_fluid_integrator(struct model *m, struct units *us,
     odep.f_b = m->Omega_b / (m->Omega_c + m->Omega_b);
     odep.N_nu = m->N_nu;
     odep.c_s_nu = m->c_s_nu;
+    odep.c_light = pcs->SpeedOfLight;
 
     /* Check if the sounds speeds have been set */
     int need_to_set_speeds = 0;
@@ -186,7 +190,13 @@ void integrate_fluid_equations(struct model *m, struct units *us,
     double log_a_final = log(a_final);
 
     /* Integrate */
-    gsl_odeiv2_driver_apply(d, &log_a, log_a_final, y);
+    int status = gsl_odeiv2_driver_apply(d, &log_a, log_a_final, y);
+
+    /* Catch errors */
+    if (status != GSL_SUCCESS) {
+        printf("ERROR: GSL ODE driver returned error code %d.\n", status);
+        return;
+    }
 
     /* Extract the final densities */
     double Dc_final = y[0];
