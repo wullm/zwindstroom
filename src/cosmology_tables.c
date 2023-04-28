@@ -126,6 +126,7 @@ void integrate_cosmology_tables(struct model *m, struct units *us,
     tab->size = size;
     tab->avec = malloc(size * sizeof(double));
     tab->Hvec = malloc(size * sizeof(double));
+    tab->Gvec = malloc(size * sizeof(double));
     double *Ga = malloc(size * sizeof(double));
     double *E2a = malloc(size * sizeof(double));
     double *dHdloga = malloc(size * sizeof(double));
@@ -263,11 +264,123 @@ void integrate_cosmology_tables(struct model *m, struct units *us,
     }
 
     /* Now, create a table with the Hubble rate */
-    for (int i=0; i<size; i++) {
-        double Omega_nu_a = strooklat_interp(&spline, Omega_nu_tot, tab->avec[i]);
-        E2a[i] = E2(tab->avec[i], Omega_CMB, Omega_ur, Omega_nu_a, Omega_c,
-                       Omega_b, Omega_lambda, Omega_k, w0, wa);
-        tab->Hvec[i] = sqrt(E2a[i]) * H_0;
+    if (m->has_external_E) {
+        /* Read the external Hubble rate file */
+        char *line = NULL;
+        size_t len = 0;
+        ssize_t read;
+
+        FILE *f = fopen(m->path_external_E, "r");
+        if (f == NULL) exit(EXIT_FAILURE);
+
+        /* Count the number of non-comment lines */
+        int lines = 0;
+        while ((read = getline(&line, &len, f)) != -1) {
+            /* Skip comments */
+            if (line[0] != '#') lines++;
+        }
+        rewind(f);
+
+        /* Allocate memory for the input data */
+        double *ext_avec = malloc(lines * sizeof(double));
+        double *ext_Evec = malloc(lines * sizeof(double));
+
+        int ctr = 0;
+        while ((read = getline(&line, &len, f)) != -1) {
+            /* Skip comments */
+            if (line[0] == '#') continue;
+            /* Parse scale factor and dimensionless Hubble rate (= E(a)) */
+            float a, E;
+            sscanf(line, "%f %f", &a, &E);
+            ext_avec[ctr] = a;
+            ext_Evec[ctr] = E;
+            ctr++;
+        }
+
+        /* Prepare an interpolation spline */
+        struct strooklat ext_spline = {ext_avec, lines};
+        init_strooklat_spline(&ext_spline, 100);
+
+        /* Interpolate and store the result in the internal Hubble vector */
+        for (int i=0; i<size; i++) {
+            double E = strooklat_interp(&ext_spline, ext_Evec, tab->avec[i]);
+            E2a[i] = E * E;
+            tab->Hvec[i] = E * H_0;
+        }
+
+        /* Free the interpolation spline */
+        free_strooklat_spline(&ext_spline);
+
+        /* Free the memory and close the file */
+        free(ext_avec);
+        free(ext_Evec);
+        fclose(f);
+    } else {
+        /* Compute the Hubble rate */
+        for (int i=0; i<size; i++) {
+            double Omega_nu_a = strooklat_interp(&spline, Omega_nu_tot, tab->avec[i]);
+            E2a[i] = E2(tab->avec[i], Omega_CMB, Omega_ur, Omega_nu_a, Omega_c,
+                           Omega_b, Omega_lambda, Omega_k, w0, wa);
+            tab->Hvec[i] = sqrt(E2a[i]) * H_0;
+        }
+    }
+
+    /* Now, create a table with the effective Gravitational constant */
+    if (m->has_external_G_eff) {
+        /* Read the external Gravitational constant file */
+        char *line = NULL;
+        size_t len = 0;
+        ssize_t read;
+
+        FILE *f = fopen(m->path_external_G_eff, "r");
+        if (f == NULL) exit(EXIT_FAILURE);
+
+        /* Count the number of non-comment lines */
+        int lines = 0;
+        while ((read = getline(&line, &len, f)) != -1) {
+            /* Skip comments */
+            if (line[0] != '#') lines++;
+        }
+        rewind(f);
+
+        /* Allocate memory for the input data */
+        double *ext_avec = malloc(lines * sizeof(double));
+        double *ext_Gvec = malloc(lines * sizeof(double));
+
+        int ctr = 0;
+        while ((read = getline(&line, &len, f)) != -1) {
+            /* Skip comments */
+            if (line[0] == '#') continue;
+            /* Parse scale factor and G_eff */
+            float a, G;
+            sscanf(line, "%f %f", &a, &G);
+            ext_avec[ctr] = a;
+            ext_Gvec[ctr] = G;
+            ctr++;
+        }
+
+        /* Prepare an interpolation spline */
+        struct strooklat ext_spline = {ext_avec, lines};
+        init_strooklat_spline(&ext_spline, 100);
+
+        /* Interpolate and store the result in the internal G_eff vector */
+        for (int i=0; i<size; i++) {
+            double G_factor = strooklat_interp(&ext_spline, ext_Gvec, tab->avec[i]);
+            tab->Gvec[i] = G_factor * G_grav;
+        }
+
+        /* Free the interpolation spline */
+        free_strooklat_spline(&ext_spline);
+
+        /* Free the memory and close the file */
+        free(ext_avec);
+        free(ext_Gvec);
+        fclose(f);
+    } else {
+        /* The Newtonian gravitational constant is just constant */
+        for (int i=0; i<size; i++) {
+            tab->Gvec[i] = G_grav;
+        }
     }
 
     /* Now, differentiate the Hubble rate */
@@ -310,7 +423,7 @@ void integrate_cosmology_tables(struct model *m, struct units *us,
     for (int i=0; i<size; i++) {
         double a = tab->avec[i];
         tab->Avec[i] = -(2.0 + dHdloga[i] / tab->Hvec[i]);
-        tab->Bvec[i] = -1.5 * Omega_m[i] / (a * a * a) / E2a[i];
+        tab->Bvec[i] = -1.5 * Omega_m[i] / (a * a * a) / E2a[i] * (tab->Gvec[i] / G_grav);
     }
 
     free(Omega_nu_nr);
@@ -376,6 +489,7 @@ void free_cosmology_tables(struct cosmology_tables *tab) {
     free(tab->Avec);
     free(tab->Bvec);
     free(tab->Hvec);
+    free(tab->Gvec);
     free(tab->f_nu_nr);
     free(tab->f_nu_nr_tot);
 }

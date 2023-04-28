@@ -32,7 +32,11 @@ class MODEL(ctypes.Structure):
                 ("w0", ctypes.c_double),
                 ("wa", ctypes.c_double),
                 ("sim_neutrino_nonrel_masses", ctypes.c_int),
-                ("sim_neutrino_nonrel_Hubble", ctypes.c_int)]
+                ("sim_neutrino_nonrel_Hubble", ctypes.c_int),
+                ("has_external_E", ctypes.c_int),
+                ("has_external_G_eff", ctypes.c_int),
+                ("path_external_E", ctypes.POINTER(ctypes.c_char)),
+                ("path_external_G_eff", ctypes.POINTER(ctypes.c_char))]
 
     # Cosmological tables with functions of time
     tables = TABLES()
@@ -67,6 +71,8 @@ class MODEL(ctypes.Structure):
                 raise ValueError("Specify the number of neutrino species (N_nu) before specifying arrays with values per species")
             # Store the address of the array
             store = (ctypes.c_double * self.N_nu)(*value)
+        elif key in {"path_external_E", "path_external_G_eff"}:
+            store = (ctypes.c_char * len(value))(*value)
         else:
             # Store the value itself
             store = value
@@ -102,6 +108,14 @@ class MODEL(ctypes.Structure):
             self.sim_neutrino_nonrel_masses = store
         elif key == "sim_neutrino_nonrel_Hubble":
             self.sim_neutrino_nonrel_Hubble = store
+        elif key == "has_external_E":
+            self.has_external_E = store
+        elif key == "has_external_G_eff":
+            self.has_external_G_eff = store
+        elif key == "path_external_E":
+            self.path_external_E = store
+        elif key == "path_external_G_eff":
+            self.path_external_G_eff = store
         else:
             raise KeyError("Unknown parameter")
 

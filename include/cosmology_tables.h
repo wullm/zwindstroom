@@ -41,6 +41,16 @@ struct model {
     int sim_neutrino_nonrel_masses;
     /* Does the simulation have a Hubble rate with Omega_nu(a) = constant? */
     int sim_neutrino_nonrel_Hubble;
+
+    /* Is an external dimensionless Hubble rate (= E(a)) file provided? */
+    int has_external_E;
+    /* Is an external effective gravitational constant file provided? */
+    int has_external_G_eff;
+
+    /* The path to the external dimensionless Hubble rate (= E(a)) file */
+    char *path_external_E;
+    /* The path to the external effective gravitational constant file */
+    char *path_external_G_eff;
 };
 
 struct cosmology_tables {
@@ -48,6 +58,7 @@ struct cosmology_tables {
     double *Avec;
     double *Bvec;
     double *Hvec;
+    double *Gvec;
     double *f_nu_nr;
     double *f_nu_nr_tot;
     int size;
