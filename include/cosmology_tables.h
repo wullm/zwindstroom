@@ -48,9 +48,9 @@ struct model {
     int has_external_G_eff;
 
     /* The path to the external dimensionless Hubble rate (= E(a)) file */
-    char *path_external_E;
+    const char *path_external_E;
     /* The path to the external effective gravitational constant file */
-    char *path_external_G_eff;
+    const char *path_external_G_eff;
 };
 
 struct cosmology_tables {

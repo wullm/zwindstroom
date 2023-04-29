@@ -12,8 +12,8 @@ deg_nu = [2.0, 1.0] # degeneracies
 N_nu = len(M_nu)
 
 # Paths to external files
-path_E = list(b"external_Ea.txt")       # Hubble rate
-path_G = list(b"external_Geff.txt")     # Gravitational constant
+path_E = list(b"example_Ea_table.txt")       # Hubble rate
+path_G = list(b"example_Geff_table.txt")     # Gravitational constant
 
 # Initialise a unit system (default uses Mpc lengths and km/s velocities)
 unit_system, physical_consts = units.init_units()
