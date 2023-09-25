@@ -85,7 +85,6 @@ int dcdm_func (double log_a, const double y[], double f[], void *params) {
     /* Pull down constants */
     const double Omega_c = m->Omega_c;
     const double Omega_b = m->Omega_b;
-    const double Omega_cb = Omega_c + Omega_b;
     const double Omega_k = m->Omega_k;
     const double Gamma_dcdm = m->Gamma_dcdm;
     const double w0 = m->w0;
