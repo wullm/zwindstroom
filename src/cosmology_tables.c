@@ -464,9 +464,9 @@ void integrate_cosmology_tables(struct model *m, struct units *us,
             Omega_m[i] = Omega_cb + Omega_nu_tot_0;
             Omega_nu_tot[i] = Omega_nu_tot_0;
             Omega_nu_nr[i] = Omega_nu_tot_0;
-            tab->f_nu_nr_tot[i] = Omega_nu_tot_0 / (Omega_cb + Omega_nu_tot_0);
+            tab->f_nu_nr_tot[i] = Omega_nu_tot_0 / (Omega_cb + Omega_nu_tot_0 + tab->Omega_dcdm[i]);
             for (int j=0; j<N_nu; j++) {
-                tab->f_nu_nr[j * size + i] = Omega_nu_0[j] / (Omega_cb + Omega_nu_tot_0);
+                tab->f_nu_nr[j * size + i] = Omega_nu_0[j] / (Omega_cb + Omega_nu_tot_0 + tab->Omega_dcdm[i]);
             }
         }
     }

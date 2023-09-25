@@ -34,7 +34,8 @@ struct ode_params {
     struct strooklat *spline;
     struct cosmology_tables *tab;
     double k;
-    double f_b;
+    double Omega_b;
+    double Omega_c;
     double *c_s_nu;
     double c_light;
     int N_nu;
@@ -49,7 +50,6 @@ int func (double log_a, const double y[], double f[], void *params) {
     /* Pull down some constants */
     const int N_nu = p->N_nu;
     const double k = p->k;
-    const double f_b = p->f_b;
     const double c = p->c_light;
 
     /* Cosmological functions of time */
@@ -57,6 +57,8 @@ int func (double log_a, const double y[], double f[], void *params) {
     const double A = strooklat_interp(spline, tab->Avec, a);
     const double B = strooklat_interp(spline, tab->Bvec, a);
     const double H = strooklat_interp(spline, tab->Hvec, a);
+    const double Omega_dcdm = strooklat_interp(spline, tab->Omega_dcdm, a);
+    const double f_b = p->Omega_b / (p->Omega_b + p->Omega_c + Omega_dcdm);
 
     /* Non-relativistic neutrino density fractions */
     double f_nu_nr_tot = 0.;
@@ -119,7 +121,8 @@ void prepare_fluid_integrator(struct model *m, struct units *us,
     /* Prepare the parameters for the fluid ODEs */
     odep.spline = &spline_cosmo;
     odep.tab = tab;
-    odep.f_b = m->Omega_b / (m->Omega_c + m->Omega_b);
+    odep.Omega_b = m->Omega_b;
+    odep.Omega_c = m->Omega_c;
     odep.N_nu = m->N_nu;
     odep.c_s_nu = m->c_s_nu;
     odep.c_light = pcs->SpeedOfLight;
