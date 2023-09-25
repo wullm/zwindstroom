@@ -15,6 +15,8 @@ class TABLES(ctypes.Structure):
                 ("Hvec", ctypes.POINTER(ctypes.c_double)),
                 ("f_nu_nr", ctypes.POINTER(ctypes.c_double)),
                 ("f_nu_nr_tot", ctypes.POINTER(ctypes.c_double)),
+                ("Omega_dcdm", ctypes.POINTER(ctypes.c_double)),
+                ("Omega_dr", ctypes.POINTER(ctypes.c_double)),
                 ("size", ctypes.c_int)]
 
 class MODEL(ctypes.Structure):
@@ -31,6 +33,8 @@ class MODEL(ctypes.Structure):
                 ("T_CMB_0", ctypes.c_double),
                 ("w0", ctypes.c_double),
                 ("wa", ctypes.c_double),
+                ("Omega_dcdmdr_0", ctypes.c_double),
+                ("Gamma_dcdm", ctypes.c_double),
                 ("sim_neutrino_nonrel_masses", ctypes.c_int),
                 ("sim_neutrino_nonrel_Hubble", ctypes.c_int)]
 
@@ -98,6 +102,10 @@ class MODEL(ctypes.Structure):
             self.w0 = store
         elif key == "wa":
             self.wa = store
+        elif key == "Omega_dcdmdr_0":
+            self.Omega_dcdmdr_0 = store
+        elif key == "Gamma_dcdm":
+            self.Gamma_dcdm = store
         elif key == "sim_neutrino_nonrel_masses":
             self.sim_neutrino_nonrel_masses = store
         elif key == "sim_neutrino_nonrel_Hubble":
@@ -139,6 +147,11 @@ class MODEL(ctypes.Structure):
     def get_f_nu_nr_tot_of_a(self, a):
         return get_f_nu_nr_tot_of_a(self.tables, a)
 
+    def get_Omega_dcdm_of_a(self, a):
+        return get_Omega_dcdm_of_a(self.tables, a)
+
+    def get_Omega_dr_of_a(self, a):
+        return get_Omega_dr_of_a(self.tables, a)
 
 backend.engine.integrate_cosmology_tables.argtypes = [ctypes.POINTER(MODEL), ctypes.POINTER(units.UNITS), ctypes.POINTER(units.PHYSICAL_CONSTS), ctypes.POINTER(TABLES), ctypes.c_double, ctypes.c_double, ctypes.c_int]
 
@@ -151,6 +164,12 @@ backend.engine.get_H_of_a.restype = ctypes.c_double
 
 backend.engine.get_f_nu_nr_tot_of_a.argtypes = [ctypes.POINTER(TABLES), ctypes.c_double]
 backend.engine.get_f_nu_nr_tot_of_a.restype = ctypes.c_double
+
+backend.engine.get_Omega_dcdm_of_a.argtypes = [ctypes.POINTER(TABLES), ctypes.c_double]
+backend.engine.get_Omega_dcdm_of_a.restype = ctypes.c_double
+
+backend.engine.get_Omega_dr_of_a.argtypes = [ctypes.POINTER(TABLES), ctypes.c_double]
+backend.engine.get_Omega_dr_of_a.restype = ctypes.c_double
 
 def integrate_cosmology_tables(model, units, physical_consts, tables, a_start, a_final, size):
     """
@@ -254,3 +273,37 @@ def get_f_nu_nr_tot_of_a(tables, a):
     """
 
     return backend.engine.get_f_nu_nr_tot_of_a(ctypes.byref(tables), a)
+
+def get_Omega_dcdm_of_a(tables, a):
+    """
+    Get the density fraction of decaying cold dark matter as a function of a
+    Parameters
+    ----------
+    tables : TABLES
+        the cosmological tables to be calculated
+    a: double
+        the scale factor time
+    Return
+    ------
+    double
+        The non-relativistic neutrino fraction
+    """
+
+    return backend.engine.get_Omega_dcdm_of_a(ctypes.byref(tables), a)
+
+def get_Omega_dr_of_a(tables, a):
+    """
+    Get the density fraction of dark radiation as a function of a
+    Parameters
+    ----------
+    tables : TABLES
+        the cosmological tables to be calculated
+    a: double
+        the scale factor time
+    Return
+    ------
+    double
+        The non-relativistic neutrino fraction
+    """
+
+    return backend.engine.get_Omega_dr_of_a(ctypes.byref(tables), a)

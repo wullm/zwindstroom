@@ -37,6 +37,9 @@ struct model {
     double w0;
     double wa;
 
+    double Omega_dcdmdr_0;
+    double Gamma_dcdm;
+
     /* Do the simulation particles not have masses that vary with w_nu(a)? */
     int sim_neutrino_nonrel_masses;
     /* Does the simulation have a Hubble rate with Omega_nu(a) = constant? */
@@ -50,6 +53,8 @@ struct cosmology_tables {
     double *Hvec;
     double *f_nu_nr;
     double *f_nu_nr_tot;
+    double *Omega_dcdm;
+    double *Omega_dr;
     int size;
 };
 
@@ -63,5 +68,7 @@ void set_neutrino_sound_speeds(struct model *m, struct units *us,
 
 double get_H_of_a(struct cosmology_tables *tab, double a);
 double get_f_nu_nr_tot_of_a(struct cosmology_tables *tab, double a);
+double get_Omega_dcdm_of_a(struct cosmology_tables *tab, double a);
+double get_Omega_dr_of_a(struct cosmology_tables *tab, double a);
 
 #endif
