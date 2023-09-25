@@ -461,7 +461,7 @@ void integrate_cosmology_tables(struct model *m, struct units *us,
      * of Omega_nu(a) with Omega_nu_0 now (i.e. before calculating Hvec). */
     if (m->sim_neutrino_nonrel_Hubble) {
         for (int i=0; i<size; i++) {
-            Omega_m[i] = Omega_cb + Omega_nu_tot_0;
+            Omega_m[i] = Omega_cb + Omega_nu_tot_0 + tab->Omega_dcdm[i];
             Omega_nu_tot[i] = Omega_nu_tot_0;
             Omega_nu_nr[i] = Omega_nu_tot_0;
             tab->f_nu_nr_tot[i] = Omega_nu_tot_0 / (Omega_cb + Omega_nu_tot_0 + tab->Omega_dcdm[i]);
@@ -505,12 +505,12 @@ void integrate_cosmology_tables(struct model *m, struct units *us,
      * relativistic contribution into account there. */
     if (m->sim_neutrino_nonrel_masses && !m->sim_neutrino_nonrel_Hubble) {
         for (int i=0; i<size; i++) {
-            Omega_m[i] = Omega_cb + Omega_nu_tot_0;
+            Omega_m[i] = Omega_cb + Omega_nu_tot_0 + tab->Omega_dcdm[i];
             Omega_nu_tot[i] = Omega_nu_tot_0;
             Omega_nu_nr[i] = Omega_nu_tot_0;
-            tab->f_nu_nr_tot[i] = Omega_nu_tot_0 / (Omega_cb + Omega_nu_tot_0);
+            tab->f_nu_nr_tot[i] = Omega_nu_tot_0 / (Omega_cb + Omega_nu_tot_0 + tab->Omega_dcdm[i]);
             for (int j=0; j<N_nu; j++) {
-                tab->f_nu_nr[j * size + i] = Omega_nu_0[j] / (Omega_cb + Omega_nu_tot_0);
+                tab->f_nu_nr[j * size + i] = Omega_nu_0[j] / (Omega_cb + Omega_nu_tot_0 + tab->Omega_dcdm[i]);
             }
         }
     }
