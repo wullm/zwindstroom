@@ -25,11 +25,14 @@
 #include <sys/time.h>
 
 #include <gsl/gsl_integration.h>
+#include <gsl/gsl_odeiv2.h>
+#include <gsl/gsl_errno.h>
 
 #include "../include/cosmology_tables.h"
 #include "../include/units.h"
 #include "../include/strooklat.h"
-
+#include "../include/mg_fR.h"
+#include "../include/mg_fT.h"
 
 double F_integrand(double x, void *params) {
     double y = *((double*) params);
@@ -142,6 +145,7 @@ void integrate_cosmology_tables(struct model *m, struct units *us,
     /* The critical density */
     const double h = m->h;
     const double H_0 = h * 100 * KM_METRES / MPC_METRES * us->UnitTimeSeconds;
+    const double H_0_2 = H_0 * H_0;
     const double G_grav = pcs->GravityG;
     const double rho_crit_0 = 3.0 * H_0 * H_0 / (8.0 * M_PI * G_grav);
 
@@ -263,11 +267,128 @@ void integrate_cosmology_tables(struct model *m, struct units *us,
     }
 
     /* Now, create a table with the Hubble rate */
-    for (int i=0; i<size; i++) {
-        double Omega_nu_a = strooklat_interp(&spline, Omega_nu_tot, tab->avec[i]);
-        E2a[i] = E2(tab->avec[i], Omega_CMB, Omega_ur, Omega_nu_a, Omega_c,
-                       Omega_b, Omega_lambda, Omega_k, w0, wa);
-        tab->Hvec[i] = sqrt(E2a[i]) * H_0;
+    if (m->mg == LCDM) {
+        /* In the case of LCDM, we just evalute E(a) */
+        for (int i=0; i<size; i++) {
+            double Omega_nu_a = strooklat_interp(&spline, Omega_nu_tot, tab->avec[i]);
+            E2a[i] = E2(tab->avec[i], Omega_CMB, Omega_ur, Omega_nu_a, Omega_c,
+                           Omega_b, Omega_lambda, Omega_k, w0, wa);
+            tab->Hvec[i] = sqrt(E2a[i]) * H_0;
+        }
+    } else if (m->mg == MG_FR) {
+        /* For f(R) Palatini gravity, first compute R(z) and then H(z) */
+        for (int i=0; i<size; i++) {
+            /* Prepare some constants */
+            const double inv_a = 1. / tab->avec[i];
+            const double inv_a2 = inv_a * inv_a;
+            const double inv_a4 = inv_a2 * inv_a2;
+            /* Density and pressure from photons and ultra-relativistic particles */
+            const double rho_r = 3.0 * H_0_2 * (Omega_CMB + Omega_ur) * inv_a4;
+            const double p_r = rho_r / 3.0;
+            /* Density and pressure from CDM and baryons (no neutrinos here) */
+            const double rho_m = 3.0 * H_0_2 * (Omega_c + Omega_b) * inv_a2 * inv_a;
+            const double p_m = 0.;
+            /* Density and pressure from all massive neutrino species */
+            double rho_nu = 0.;
+            double p_nu = 0.;
+            for (int j=0; j<N_nu; j++) {
+                const double O_nu = Omega_nu[j * size + i];
+                const double w = w_nu[j * size + i];
+                const double rho = 3.0 * H_0_2 * O_nu * inv_a4;
+                rho_nu += rho;
+                p_nu += w * rho;
+            }
+
+            /* Hence, Q(z) given by Eq. (6) in my notes */
+            const double p_tot = p_r + p_m + p_nu;
+            const double rho_tot = rho_r + rho_m + rho_nu;
+            const double Q = (3. * p_tot - rho_tot);
+
+            /* Solve for R(z) */
+            const double b = m->b;
+            const double Lambda = 3.0 * H_0_2 * Omega_lambda;
+            const double R = fR_solve_for_R(b, Lambda, Q);
+
+            /* Evalue f(R) and its derivatives */
+            const double arg = R / (b * Lambda);
+            const double expR = exp(-arg);
+            const double fR = R - 2.0 * Lambda * (1.0 - expR);
+            const double fR_prime = 1.0 - 2.0 / b * expR;
+            const double fR_prime_prime = 2.0 / (b * b * Lambda) * expR;
+
+            /* Evaluate the Hubble rate */
+            const double denom_fac = 1.0 - 1.5 * (fR_prime_prime * (R * fR_prime - 2.0 * fR)) / (fR_prime * (R * fR_prime_prime - fR_prime));
+            const double Hz_2 = 1.0 / (6.0 * fR_prime) * (2 * rho_tot + R * fR_prime - fR) / (denom_fac * denom_fac);
+            const double Hz = sqrt(Hz_2);
+
+            tab->Hvec[i] = Hz;
+            printf("%g %g\n", tab->avec[i], Hz);
+        }
+    } else if (m->mg == MG_FT) {
+        /* Parameters for the MG f(T) Hubble rate calculation */
+        struct fT_df_params Ea_ode_params;
+        Ea_ode_params.Omega_CMB = Omega_CMB;
+        Ea_ode_params.Omega_ur = Omega_ur;
+        Ea_ode_params.Omega_c = Omega_c;
+        Ea_ode_params.Omega_b = Omega_b;
+        Ea_ode_params.Omega_lambda = Omega_lambda;
+        Ea_ode_params.Omega_nu = Omega_nu;
+        Ea_ode_params.w_nu = w_nu;
+        Ea_ode_params.spline = &spline;
+        Ea_ode_params.m = m;
+        Ea_ode_params.us = us;
+        Ea_ode_params.pcs = pcs;
+        Ea_ode_params.size = size;
+
+        /* Prepare the ODE system */
+        gsl_odeiv2_system ode_system;
+        ode_system.function = fT_dfunc;
+        ode_system.dimension = 1;
+        ode_system.params = &Ea_ode_params;
+
+        /* We can solve for y[0] by starting from H = H_0 at a = 1 */
+        /* Hence, we need to solve forwards for a > 1 and backwards for a < 1 */
+        const double step_size = 1e-8;
+        gsl_odeiv2_driver *drv_forward = gsl_odeiv2_driver_alloc_y_new(&ode_system, gsl_odeiv2_step_rkf45, step_size, abs_tol, abs_tol);
+        gsl_odeiv2_driver *drv_backward = gsl_odeiv2_driver_alloc_y_new(&ode_system, gsl_odeiv2_step_rkf45, -step_size, abs_tol, abs_tol);
+
+        /* Set the state variables */
+        double a_integrate = 1.0;
+        double H_integrate = H_0;
+        int status;
+        int begin_forward_index = 0;
+
+        /* Forwards first, solving y[0] for all a > 1 */
+        for (int i = 0; i < size; i++) {
+            double a_next = tab->avec[i];
+            if (a_next < 1) {
+                begin_forward_index++;
+                continue;
+            }
+
+            status = gsl_odeiv2_driver_apply(drv_forward, &a_integrate, a_next, &H_integrate);
+            if (status != GSL_SUCCESS) {
+                printf("Error: status = %d \n", status);
+                break;
+            }
+            tab->Hvec[i] = H_integrate;
+        }
+
+        /* Now, reset the state variables */
+        a_integrate = 1.0;
+        H_integrate = H_0;
+
+        /* And integrate backwards, solving y[0] for all a < 1 */
+        for (int i = begin_forward_index - 1; i >= 0; i--) {
+            double a_next = tab->avec[i];
+            status = gsl_odeiv2_driver_apply(drv_backward, &a_integrate, a_next,
+                             &H_integrate);
+            if (status != GSL_SUCCESS) {
+                printf("Error: status = %d \n", status);
+                break;
+            }
+            tab->Hvec[i] = H_integrate;
+        }
     }
 
     /* Now, differentiate the Hubble rate */

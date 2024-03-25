@@ -32,7 +32,9 @@ class MODEL(ctypes.Structure):
                 ("w0", ctypes.c_double),
                 ("wa", ctypes.c_double),
                 ("sim_neutrino_nonrel_masses", ctypes.c_int),
-                ("sim_neutrino_nonrel_Hubble", ctypes.c_int)]
+                ("sim_neutrino_nonrel_Hubble", ctypes.c_int),
+                ("mg", ctypes.c_int),
+                ("b", ctypes.c_double),]
 
     # Cosmological tables with functions of time
     tables = TABLES()
@@ -102,6 +104,19 @@ class MODEL(ctypes.Structure):
             self.sim_neutrino_nonrel_masses = store
         elif key == "sim_neutrino_nonrel_Hubble":
             self.sim_neutrino_nonrel_Hubble = store
+        elif key == "mg":
+            if store == "LCDM":
+                self.mg = 0
+            elif store == "MG_FR":
+                self.mg = 1
+            elif store == "MG_FT":
+                self.mg = 2
+            elif store == "MG_FTT":
+                self.mg = 3
+            else:
+                raise KeyError("Unknown MG model")
+        elif key == "b":
+            self.b = store
         else:
             raise KeyError("Unknown parameter")
 

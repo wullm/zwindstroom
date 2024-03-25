@@ -22,7 +22,9 @@ params = {"h": 0.681,
           "N_ur": 2.0308,
           "T_nu_0": 2.7255 * 0.71611,
           "T_CMB_0": 2.7255,
-          "w0": -1.0}
+          "w0": -1.0,
+          "mg": "MG_FR",
+          "b": 0.65}
 model = cosmology.MODEL()
 model.set(params)
 model.compute(unit_system, physical_consts, a_start)

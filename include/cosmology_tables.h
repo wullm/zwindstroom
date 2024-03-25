@@ -22,6 +22,14 @@
 
 #include "units.h"
 
+/* Types of modified gravity models */
+enum mg_model {
+    LCDM,
+    MG_FR,
+    MG_FT,
+    MG_FTT
+ };
+
 struct model {
     double h;
     double Omega_b;
@@ -41,6 +49,11 @@ struct model {
     int sim_neutrino_nonrel_masses;
     /* Does the simulation have a Hubble rate with Omega_nu(a) = constant? */
     int sim_neutrino_nonrel_Hubble;
+
+    /* The type modified gravity model */
+    enum mg_model mg;
+    /* Modified gravity parameter */
+    double b;
 };
 
 struct cosmology_tables {
